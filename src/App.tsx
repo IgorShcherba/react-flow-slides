@@ -1,35 +1,75 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+/* eslint-disable no-case-declarations */
+import {
+  Background,
+  BackgroundVariant,
+  NodeMouseHandler,
+  ReactFlow,
+  useReactFlow,
+} from "@xyflow/react";
+import { Slide, SlideData } from "./components/slide";
+import { slides, slidesToElements } from "./slides";
+import { KeyboardEventHandler, useCallback, useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+const nodeTypes = {
+  slide: Slide,
+};
+
+const { nodes, edges } = slidesToElements("0", slides);
+const initialSlide = "01";
+export default function App() {
+  const [currentSlide, setCurrentSlide] = useState(initialSlide);
+  const { fitView } = useReactFlow();
+
+  const handleNodeClick: NodeMouseHandler = useCallback(
+    (_event, node) => {
+      if (node.id !== currentSlide) {
+        setCurrentSlide(node.id);
+        fitView({ nodes: [{ id: node.id }], duration: 100 });
+      }
+    },
+    [fitView, currentSlide]
+  );
+
+  const handleKeyPress = useCallback<KeyboardEventHandler>(
+    (event) => {
+      console.log("Key pressed", event.key);
+      const slide = slides[currentSlide];
+
+      switch (event.key) {
+        case "ArrowLeft":
+        case "ArrowUp":
+        case "ArrowDown":
+        case "ArrowRight": {
+          const direction = event.key.slice(5).toLowerCase() as keyof SlideData;
+          const target = slide[direction];
+
+          // Prevent the arrow keys from scrolling the page when React Flow is
+          // only part of a larger application.
+          event.preventDefault();
+
+          if (target) {
+            setCurrentSlide(target);
+            fitView({ nodes: [{ id: target }], duration: 100 });
+          }
+        }
+      }
+    },
+    [fitView, currentSlide]
+  );
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <ReactFlow
+      nodes={nodes}
+      nodeTypes={nodeTypes}
+      nodesDraggable={false}
+      edges={edges}
+      fitView
+      fitViewOptions={{ nodes: [{ id: initialSlide }], duration: 100 }}
+      minZoom={0.1}
+      onKeyDown={handleKeyPress}
+      onNodeClick={handleNodeClick}
+    >
+      <Background color="#f2f2f2" variant={BackgroundVariant.Lines} />
+    </ReactFlow>
+  );
 }
-
-export default App

@@ -1,4 +1,10 @@
-import { useReactFlow, type Node, type NodeProps } from "@xyflow/react";
+import {
+  Handle,
+  Position,
+  useReactFlow,
+  type Node,
+  type NodeProps,
+} from "@xyflow/react";
 import { useCallback } from "react";
 import { Remark } from "react-remark";
 
@@ -37,6 +43,8 @@ export function Slide({ data }: NodeProps<SlideNode>) {
       style={style}
     >
       <Remark>{data.source}</Remark>
+      <Handle type="target" position={Position.Left} isConnectable={false} />
+      <Handle type="source" position={Position.Right} isConnectable={false} />
 
       <footer className="h-20 nopan absolute bottom-0 right-0">
         {data.left ? (
